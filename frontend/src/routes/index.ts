@@ -11,6 +11,7 @@ import SectionDetails from '@/pages/Students/SectionDetail'
 import SectionView from '@/pages/Students/SectionView'
 import AuthWrapper from '@/components/proctoring-components/AuthWrapper'
 import testing from '@/pages/Students/testing'
+import AiEngine from '@/pages/Admin/AiEngine'
 
 const router = createBrowserRouter([
   {
@@ -56,6 +57,10 @@ const router = createBrowserRouter([
       {
         path: '/login',
         element: React.createElement(LoginPage),
+      },
+      {
+        path: '/admin',
+        element: React.createElement(AiEngine),
       },
     ],
   },
