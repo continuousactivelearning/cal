@@ -50,13 +50,15 @@ export const anotherApiService = createApi({
         answers: string
         isAnswerCorrect: boolean
         createdAt: string
+        currentStreak: number;
       },
       {
-        assessmentId: number
-        courseId: number
+        assessmentId: string
+        courseId: string
+        sectionId: string
         attemptId: number
         answers: string
-        questionId: number
+        questionId: string
       }
     >({
       query: (submissionData) => ({

@@ -6,6 +6,7 @@ import ProgressTracking from './routes/ProgressTracking';
 import FetchProgress from './routes/FetchProgress';
 import GoogleAuthhVerification from './routes/GoogleAuthhVerification';
 import BulkProcess from './routes/BulkProgress';
+import Streak from './routes/Streak';
 import cors from 'cors';
 import admin from 'firebase-admin';
 import * as dotenv from 'dotenv';
@@ -40,8 +41,11 @@ app.use(ProgressTracking);
 app.use(GoogleAuthhVerification);
 app.use(BulkProcess);
 app.use(FetchProgress);
+app.use(Streak);
 
 exports.activityEngine = https.onRequest(app);
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
+
+

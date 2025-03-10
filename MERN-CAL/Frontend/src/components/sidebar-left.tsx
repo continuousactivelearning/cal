@@ -27,6 +27,8 @@ import { fetchSectionProgress } from '@/store/slices/sectionProgressSlice'
 import { fetchProgress } from '@/store/slices/fetchStatusSlice'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
+import Cookies from 'js-cookie'
+import { setStreak } from '@/store/slices/streakSlice'
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -125,6 +127,25 @@ export function SidebarLeft({
     }
   }, [dispatch, selectedCourseId, sectionItems, sectionItemProgress])
 
+   // Function to fetch streak
+  const fetchStreak = async (sectionId) => {
+   console.log('fetching streak');
+   const studentId = Cookies.get('user_id')
+   try {
+    const response = await fetch('http://localhost:8080/streak', {
+      method: 'POST',
+      headers: {
+       'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ studentId, sectionId }),
+    })
+    const data = await response.json()
+    dispatch(setStreak(data.currentStreak))
+   } catch (error) {
+    console.error('Failed to fetch streak:', error)
+   }
+  }
+
   return (
     <Sidebar {...props}>
       <SidebarHeader>
@@ -159,7 +180,10 @@ export function SidebarLeft({
                   <SidebarMenuItem>
                     <CollapsibleTrigger asChild>
                       <SidebarMenuButton
-                        onClick={() => setSelectedSectionId(section.id)}
+                        onClick={() => {
+                          setSelectedSectionId(section.id);
+                        }
+                        }
                       >
                         <span
                           className={`size-2 rounded-full ${sectionDotColor}`}
@@ -194,6 +218,22 @@ export function SidebarLeft({
                                   <div
                                     className='flex items-center gap-2 w-full'
                                     onClick={() => {
+<<<<<<< HEAD
+                                      fetchStreak(sectionId);
+                                      if (item.item_type === 'Video') {
+                                        navigate('/content-scroll-view', {
+                                          state: {
+                                            assignment,
+                                            sectionId,
+                                            courseId,
+                                            moduleId,
+                                          },
+                                        })
+                                      } else if (
+                                        item.item_type === 'Assessment'
+                                      ) {
+                                        toast('Watch video first')
+=======
                                       switch (item.item_type) {
                                         case 'Video':
                                           navigate('/content-scroll-view', {
@@ -211,6 +251,7 @@ export function SidebarLeft({
                                         default:
                                           // Handle other cases or do nothing
                                           break
+>>>>>>> origin/master
                                       }
                                     }}
                                   >

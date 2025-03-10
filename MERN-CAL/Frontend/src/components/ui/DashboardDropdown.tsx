@@ -16,14 +16,19 @@ import {
 import { useLogoutMutation } from '@/store/apiService'
 import { logoutState } from '@/store/slices/authSlice'
 import Cookies from 'js-cookie'
-import { useDispatch } from 'react-redux'
-import { useNavigate } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux' // ✅ Added useSelector
+import { useNavigate,useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
 
 export function DashboardDropdown() {
   const navigate = useNavigate()
   const dispatch = useDispatch()
+  const location = useLocation()
   const name = Cookies.get('user_name')
   const [logout] = useLogoutMutation()
+
+  // ✅ Fetch streak from Redux store
+  const streak = useSelector((state) => state.streak.sectionstreak)
 
   const handleLogout = async () => {
     try {
@@ -37,64 +42,33 @@ export function DashboardDropdown() {
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button>Menu</Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className='w-56'>
-        <DropdownMenuLabel>Menu</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {/* <DropdownMenuGroup>
-          <DropdownMenuItem>
-            Profile
-            <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
+    <div className="flex items-center gap-4"> {/* ✅ Added flex container to align elements */}
+      {/* ✅ Display Streak */}
+      {location.pathname === '/content-scroll-view' &&(<span className="text-gray-600 text-sm">🔥 Streak: {streak}</span>
+)}
+
+      {/* ✅ Moved the Menu button to the left */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button>Menu</Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-56">
+          <DropdownMenuLabel>Menu</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => navigate('/')}>
+            Dashboard
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            Billing
-            <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
+          <DropdownMenuItem onClick={() => navigate('/analytics')}>
+            Analytics
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            Settings
-            <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
+          <DropdownMenuItem disabled>Admin</DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleLogout}>
+            Log out
+            <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            Keyboard shortcuts
-            <DropdownMenuShortcut>⌘K</DropdownMenuShortcut>
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem>Team</DropdownMenuItem>
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger>Invite users</DropdownMenuSubTrigger>
-            <DropdownMenuPortal>
-              <DropdownMenuSubContent>
-                <DropdownMenuItem>Email</DropdownMenuItem>
-                <DropdownMenuItem>Message</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>More...</DropdownMenuItem>
-              </DropdownMenuSubContent>
-            </DropdownMenuPortal>
-          </DropdownMenuSub>
-          <DropdownMenuItem>
-            New Team
-            <DropdownMenuShortcut>⌘+T</DropdownMenuShortcut>
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator /> */}
-        <DropdownMenuItem onClick={() => navigate('/')}>
-          Dashboard
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate('/analytics')}>
-          Analytics
-        </DropdownMenuItem>
-        <DropdownMenuItem disabled>Admin</DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleLogout}>
-          Log out
-          <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   )
 }

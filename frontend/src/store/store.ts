@@ -12,6 +12,7 @@ import moduleProgressReducer from './slices/moduleProgressSlice'
 import progressUpdateReducer from './slices/updateProgressSlice'
 import sidebarStateReducer from './slices/sidebarSlice'
 import studentsProgressReducer from './slices/AllStudentsProgressSlice'
+import streakReducer from './slices/streakSlice'
 import itemsReducer from './slices/fetchItems'
 import weeklyProgressReducer from './slices/FetchWeeklyProgress'
 import storageSession from 'redux-persist/lib/storage/session' // Importing sessionStorage
@@ -42,6 +43,7 @@ const rootReducer = combineReducers({
   modules: modulesReducer,
   sections: sectionsReducer,
   progress: progressReducer,
+  streak: streakReducer,
   sectionProgress: sectionProgressReducer,
   moduleProgress: moduleProgressReducer,
   progressUpdate: progressUpdateReducer,
