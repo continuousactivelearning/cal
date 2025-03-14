@@ -2,28 +2,28 @@ import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuPortal,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useLogoutMutation } from '@/store/apiService'
 import { logoutState } from '@/store/slices/authSlice'
 import Cookies from 'js-cookie'
-import { useDispatch } from 'react-redux'
-import { useNavigate } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Flame } from 'lucide-react' // 🔥 Import aesthetic icon
 
 export function DashboardDropdown() {
   const navigate = useNavigate()
   const dispatch = useDispatch()
+  const location = useLocation()
   const name = Cookies.get('user_name')
   const [logout] = useLogoutMutation()
+
+  // ✅ Fetch streak from Redux store
+  const streak = useSelector((state) => state.streak.sectionstreak)
 
   const handleLogout = async () => {
     try {
@@ -37,64 +37,39 @@ export function DashboardDropdown() {
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button>Menu</Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className='w-56'>
-        <DropdownMenuLabel>Menu</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {/* <DropdownMenuGroup>
-          <DropdownMenuItem>
-            Profile
-            <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
+    <div className="flex items-center gap-4"> {/* ✅ Flex container for alignment */}
+      
+      {/* ✅ Stylish Streak Display */}
+      {location.pathname === '/content-scroll-view' && (
+        <div className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-lg shadow-sm">
+          <Flame className="w-4 h-4 text-orange-500" /> {/* 🔥 Aesthetic fire icon */}
+          <span className="text-sm text-gray-700">
+            {`Streak: ${streak?streak:0}`} {/* ✅ Handles empty streak */}
+          </span>
+        </div>
+      )}
+
+      {/* ✅ Menu Button */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button>Menu</Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-56">
+          <DropdownMenuLabel>Menu</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => navigate('/')}>
+            Dashboard
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            Billing
-            <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
+          <DropdownMenuItem onClick={() => navigate('/analytics')}>
+            Analytics
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            Settings
-            <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
+          <DropdownMenuItem disabled>Admin</DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleLogout}>
+            Log out
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            Keyboard shortcuts
-            <DropdownMenuShortcut>⌘K</DropdownMenuShortcut>
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem>Team</DropdownMenuItem>
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger>Invite users</DropdownMenuSubTrigger>
-            <DropdownMenuPortal>
-              <DropdownMenuSubContent>
-                <DropdownMenuItem>Email</DropdownMenuItem>
-                <DropdownMenuItem>Message</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>More...</DropdownMenuItem>
-              </DropdownMenuSubContent>
-            </DropdownMenuPortal>
-          </DropdownMenuSub>
-          <DropdownMenuItem>
-            New Team
-            <DropdownMenuShortcut>⌘+T</DropdownMenuShortcut>
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator /> */}
-        <DropdownMenuItem onClick={() => navigate('/')}>
-          Dashboard
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate('/analytics')}>
-          Analytics
-        </DropdownMenuItem>
-        <DropdownMenuItem disabled>Admin</DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleLogout}>
-          Log out
-          <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   )
 }

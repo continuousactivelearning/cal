@@ -273,10 +273,10 @@ export const apiService = createApi({
     }),
     courseEnroll: builder.mutation<
       void,
-      { courseId: string; studentIds: string[] }
+      { courseId: string; studentIds: string[];batchName:string }
     >({
       query: (enrollmentData) => ({
-        url: '/progress/initialize-progress',
+        url: `/progress/initialize-progress/${enrollmentData.batchName}`,  
         method: 'POST',
         body: enrollmentData,
         headers: {

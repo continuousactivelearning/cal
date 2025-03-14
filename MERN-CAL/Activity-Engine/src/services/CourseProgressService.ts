@@ -599,21 +599,58 @@ export class CourseProgressService {
     courseData: CourseProgressData
   ): Promise<{ studentCount: number; totalRecords: number }> {
     const { courseInstanceId, studentIds, modules } = courseData;
-
+  
     let totalRecords = 0;
     const progressRecords = [];
-
+  
     // Extract all IDs from the course progress data
     const { modules: moduleIds } = extractAllIds(courseData);
     console.log("I am courseData", courseData);
-
+  
     // Create progress records for each student
     for (const studentId of studentIds) {
+      // Forcefully create or update TotalProgress with progress = 0
+      progressRecords.push(
+        prisma.totalProgress.upsert({
+          where: {
+            studentId_courseInstanceId: {
+              studentId,
+              courseInstanceId,
+            },
+          },
+          update: {
+            progress: 0, // Set progress to 0 even if the record exists
+          },
+          create: {
+            studentId,
+            courseInstanceId,
+            progress: 0, // Initialize progress to 0
+          },
+        })
+      );
+
+      progressRecords.push(
+        prisma.studentCourseProgress.upsert({
+          where: {
+            studentId_courseInstanceId: { studentId, courseInstanceId },
+          },
+          update: {}, // No updates needed, just ensure existence
+          create: {
+            studentId,
+            courseInstanceId,
+            progress: ProgressEnum.IN_PROGRESS,
+          },
+        })
+      );
+      
+  
+      totalRecords += 1; // Increment total records count
+  
       let previousModuleComplete = true; // Assume the first module has no predecessor
       let moduleData = [];
       let sectionData = [];
       let sectionItemData = [];
-
+  
       for (const module of modules) {
         const moduleProgress = previousModuleComplete
           ? ProgressEnum.IN_PROGRESS
@@ -624,7 +661,7 @@ export class CourseProgressService {
           moduleId: module.moduleId,
           progress: moduleProgress,
         });
-
+  
         let firstSectionInitialized = false;
         for (const section of module.sections) {
           const sectionProgress =
@@ -638,7 +675,7 @@ export class CourseProgressService {
             sectionId: section.sectionId,
             progress: sectionProgress,
           });
-
+  
           let firstItemInitialized = false;
           for (const item of section.sectionItems) {
             const itemProgress =
@@ -652,13 +689,13 @@ export class CourseProgressService {
               sectionItemId: item.sectionItemId,
               progress: itemProgress,
             });
-
+  
             if (!firstItemInitialized) firstItemInitialized = true;
           }
-
+  
           if (!firstSectionInitialized) firstSectionInitialized = true;
         }
-
+  
         // Check if the current module is complete to update the flag for the next module
         const currentModuleProgress =
           await prisma.studentModuleProgress.findUnique({
@@ -671,7 +708,7 @@ export class CourseProgressService {
             },
             select: { progress: true },
           });
-
+  
         if (
           currentModuleProgress &&
           currentModuleProgress.progress === ProgressEnum.COMPLETE
@@ -681,7 +718,7 @@ export class CourseProgressService {
           previousModuleComplete = false;
         }
       }
-
+  
       // Add all prepared data to the progress records
       progressRecords.push(
         prisma.studentModuleProgress.createMany({
@@ -697,11 +734,11 @@ export class CourseProgressService {
           skipDuplicates: true,
         })
       );
-
+  
       // Get meta data for modules, sections, and section items
       const { moduleNextData, sectionNextData, sectionItemNextData } =
         getNextData(courseData);
-
+  
       // Use upserts for module, section, and section item meta data
       progressRecords.push(
         ...moduleNextData.map((nextData) =>
@@ -732,12 +769,12 @@ export class CourseProgressService {
           })
         )
       );
-
+  
       // Increment total records count
       totalRecords +=
         moduleData.length + sectionData.length + sectionItemData.length;
     }
-
+  
     // Execute all progress record updates in a transaction
     try {
       await prisma.$transaction(progressRecords);

@@ -10,7 +10,7 @@ export const fetchAllStudentsProgress = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await axios.get(
-        `${ACTIVITY_URL}/all-students-progress`
+        `${ACTIVITY_URL}all-students-progress`
       )
       console.log('API response:', response.data)
       return response.data

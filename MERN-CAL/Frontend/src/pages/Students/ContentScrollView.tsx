@@ -34,6 +34,7 @@ import { Slider } from '@/components/ui/slider'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 
+
 // These are the proctoring components comming form proctoring components folder which ensures the keyboard is disabled for this page as well as right rightclick is also disabled
 import KeyboardLock from '@/components/proctoring-components/KeyboardLock'
 import RightClickDisabler from '@/components/proctoring-components/RightClickDisable'
@@ -50,6 +51,7 @@ import { Progress } from '@/components/ui/progress'
 
 import Cookies from 'js-cookie'
 import { useDispatch } from 'react-redux'
+import { setStreak } from '@/store/slices/streakSlice'
 import {
   clearAndFetchProgress,
   clearProgress,
@@ -485,6 +487,7 @@ const ContentScrollView = () => {
 
     submitAssessment({
       assessmentId: assessmentId,
+      sectionId:sectionId,
       courseId: courseId,
       attemptId: responseData,
       questionId: question.id,
@@ -494,6 +497,9 @@ const ContentScrollView = () => {
         if (response.data) {
           Cookies.set('gradingData', response.data.isAnswerCorrect)
           setGradingData(response.data.isAnswerCorrect)
+          if (response.data.currentStreak !== undefined) {
+            dispatch(setStreak(response.data.currentStreak)) // ✅ Dispatch Redux update
+          }
           if (response.data.isAnswerCorrect === false) {
             // const nextFrameIndex =
             //   (currentFrame - 1 + content.length) % content.length
@@ -589,6 +595,7 @@ const ContentScrollView = () => {
       })
   }
 
+  
   // This funtion is responsible to set the selected option after click on any option of question by user
   // const handleOptionClick = (option) => {
   //   setSelectedOption(option)

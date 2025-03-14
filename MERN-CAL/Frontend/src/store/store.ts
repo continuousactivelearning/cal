@@ -16,6 +16,7 @@ import itemsReducer from './slices/fetchItems'
 import weeklyProgressReducer from './slices/FetchWeeklyProgress'
 import storageSession from 'redux-persist/lib/storage/session' // Importing sessionStorage
 import usersSlicereducer from './slices/GetUsersSlice'
+import streakReducer from './slices/streakSlice'
 
 const persistConfig = {
   key: 'root',
@@ -33,6 +34,7 @@ const persistConfig = {
     'weeklyProgress',
     'studentsProgress',
     'users',
+    'streak',
   ],
 }
 
@@ -50,6 +52,7 @@ const rootReducer = combineReducers({
   weeklyProgress: weeklyProgressReducer,
   studentsProgress: studentsProgressReducer,
   users: usersSlicereducer,
+  streak: streakReducer,
   [apiService.reducerPath]: apiService.reducer,
   [anotherApiService.reducerPath]: anotherApiService.reducer,
 })
@@ -67,6 +70,8 @@ interface AppState {
   progressUpdate: ReturnType<typeof progressUpdateReducer>
   weeklyProgress: ReturnType<typeof weeklyProgressReducer>
   studentsProgress: ReturnType<typeof studentsProgressReducer>
+  streak : ReturnType<typeof streakReducer>
+  users : ReturnType<typeof usersSlicereducer>
   [apiService.reducerPath]: ReturnType<typeof apiService.reducer>
   [anotherApiService.reducerPath]: ReturnType<typeof anotherApiService.reducer>
 }
