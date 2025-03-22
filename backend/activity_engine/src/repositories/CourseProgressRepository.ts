@@ -442,42 +442,119 @@ export class CourseProgressRepository {
         courseInstanceId: string,
         studentId: string,
         sectionItemIds: string[]
-    ): Promise<any[]> {
-        const transactions = sectionItemIds.map(async (sectionItemId) => {
-            const existingProgress = await prisma.studentSectionItemProgress.findUnique({
+    ) {
+        return prisma.$transaction(async (tx) => {
+            // Step 1: Update section item progress
+            await tx.studentSectionItemProgress.updateMany({
                 where: {
-                    studentId_sectionItemId_courseInstanceId: {
-                        studentId,
-                        sectionItemId,
-                        courseInstanceId,
-                    },
+                    studentId: studentId,
+                    sectionItemId: { in: sectionItemIds },
+                    courseInstanceId: courseInstanceId,
+                    progress: ProgressEnum.IN_PROGRESS
                 },
+                data: { progress: ProgressEnum.COMPLETE }
             });
-
-            if (!existingProgress) {
-                throw new Error(`No progress record found for section item ID ${sectionItemId}`);
+    
+            await tx.studentSectionItemProgress.updateMany({
+                where: {
+                    studentId: studentId,
+                    sectionItemId: { in: sectionItemIds },
+                    courseInstanceId: courseInstanceId,
+                    progress: ProgressEnum.INCOMPLETE
+                },
+                data: { progress: ProgressEnum.IN_PROGRESS }
+            });
+    
+            // Step 2: Fetch the student's updated progress count
+            const sectionItems = await tx.studentSectionItemProgress.findMany({
+                where: { studentId: studentId, courseInstanceId: courseInstanceId },
+                select: { progress: true }
+            });
+    
+            const totalSectionItems = sectionItems.length;
+            const completedSectionItems = sectionItems.filter(
+                (item) => item.progress === ProgressEnum.COMPLETE
+            ).length;
+    
+            const newStudentProgress = totalSectionItems > 0
+                ? Math.round((completedSectionItems / totalSectionItems) * 100)
+                : 0;
+    
+            // Step 3: Fetch total students in the course
+            const totalStudents = await tx.totalProgress.count({
+                where: { courseInstanceId: courseInstanceId }
+            });
+    
+            // Step 4: Fetch the sum of all students' progress
+            const totalProgressRecords = await tx.totalProgress.findMany({
+                where: { courseInstanceId: courseInstanceId },
+                select: { progress: true }
+            });
+    
+            const oldTotalProgressSum = totalProgressRecords.reduce(
+                (sum, record) => sum + record.progress, 0
+            );
+    
+            // Step 5: Fetch previous student progress
+            const oldStudentProgressRecord = await tx.totalProgress.findFirst({
+                where: { studentId: studentId, courseInstanceId: courseInstanceId },
+                select: { id: true, progress: true }
+            });
+    
+            const oldStudentProgress = oldStudentProgressRecord?.progress || 0;
+            const totalProgressId = oldStudentProgressRecord?.id || null;
+    
+            // Step 6: **Correctly Compute New Total Progress Sum**
+            const newTotalProgressSum = oldTotalProgressSum - oldStudentProgress + newStudentProgress;
+    
+            // Step 7: Compute the Correct New Average Progress
+            const newAverageProgress = totalStudents > 0
+                ? Math.round(newTotalProgressSum / totalStudents) // ✅ Correct formula
+                : 0;
+    
+            // Step 8: Update or insert student's total progress
+            if (totalProgressId) {
+                await tx.totalProgress.update({
+                    where: { id: totalProgressId },
+                    data: { progress: newStudentProgress }
+                });
+            } else {
+                await tx.totalProgress.create({
+                    data: {
+                        studentId: studentId,
+                        courseInstanceId: courseInstanceId,
+                        progress: newStudentProgress,
+                        createdAt: new Date()
+                    }
+                });
             }
-
-            const newProgress =
-                existingProgress.progress === ProgressEnum.INCOMPLETE
-                    ? ProgressEnum.IN_PROGRESS
-                    : ProgressEnum.COMPLETE;
-
-            return prisma.studentSectionItemProgress.update({
-                where: {
-                    studentId_sectionItemId_courseInstanceId: {
-                        studentId,
-                        sectionItemId,
-                        courseInstanceId,
-                    },
-                },
-                data: {
-                    progress: newProgress,
-                },
+    
+            // Step 9: **Fix Average Progress Calculation**
+            const averageProgressRecord = await tx.averageProgress.findFirst({
+                where: { courseInstanceId: courseInstanceId },
+                select: { id: true }
             });
+    
+            if (averageProgressRecord?.id) {
+                await tx.averageProgress.update({
+                    where: { id: averageProgressRecord.id },
+                    data: { progress: newAverageProgress }
+                });
+            } else {
+                await tx.averageProgress.create({
+                    data: {
+                        courseInstanceId: courseInstanceId,
+                        progress: newAverageProgress,
+                        createdAt: new Date()
+                    }
+                });
+            }
+    
+            return {
+                studentProgress: newStudentProgress,
+                averageProgress: newAverageProgress
+            };
         });
-
-        return Promise.all(transactions);
     }
 
 
