@@ -6,24 +6,21 @@ export const fetchWeeklyProgress = createAsyncThunk(
   'weeklyProgress/fetchWeeklyProgress',
   async (_, { rejectWithValue, dispatch }) => {
     try {
-      // Dispatch the RTK Query endpoint and await the promise
-      const resultAction = await dispatch(
-        anotherApiService.endpoints.fetchWeeklyProgress.initiate()
-      )
+      // Use the RTK Query endpoint directly
+      const result = await dispatch(
+        anotherApiService.endpoints.fetchWeeklyProgress.initiate(undefined, { forceRefetch: true })
+      ).unwrap(); // Use .unwrap() to handle the promise
 
-      // Correctly use unwrap after ensuring resultAction is resolved
-      let response = unwrapResult(resultAction)
-
-      console.log('API response for weekly progress:', response)
-      return response
+      console.log('API response for weekly progress:', result);
+      return result;
     } catch (error) {
-      console.error('Error fetching weekly progress:', error)
+      console.error('Error fetching weekly progress:', error);
       return rejectWithValue(
         error.data || error.message || 'An unknown error occurred'
-      )
+      );
     }
   }
-)
+);
 
 const initialState = {
   weeklyProgress: null,

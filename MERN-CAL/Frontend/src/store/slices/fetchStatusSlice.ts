@@ -32,7 +32,7 @@ export const clearAndFetchProgress = createAsyncThunk(
       const token = Cookies.get('access_token')
       const studentId = Cookies.get('user_id')
       const response = await axios.get(
-        `${ACTIVITY_URL}/course-progress/section-item?courseInstanceId=${courseInstanceId}&sectionItemId=${sectionItemId}&studentId=${studentId}`,
+        `${ACTIVITY_URL}course-progress/section-item?courseInstanceId=${courseInstanceId}&sectionItemId=${sectionItemId}&studentId=${studentId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

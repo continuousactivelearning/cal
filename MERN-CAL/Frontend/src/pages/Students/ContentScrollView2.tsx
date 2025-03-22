@@ -116,6 +116,8 @@ import { Fullscreen, Pause, Play } from 'lucide-react'
 import { Slider } from '@/components/ui/slider'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { useDispatch } from 'react-redux'
+import { setStreak } from '@/store/slices/streakSlice'
 import KeyboardLock from '@/components/proctoring-components/KeyboardLock'
 import RightClickDisabler from '@/components/proctoring-components/RightClickDisable'
 import { useFetchItemsWithAuthQuery } from '@/store/ApiServices/LmsEngine/DataFetchApiServices'
@@ -185,6 +187,7 @@ const ContentScrollView2 = () => {
   //   const [gradingData, setGradingData] = useState<boolean | null>(null)
   const [isPlayerReady, setIsPlayerReady] = useState(false)
   const [ytApiReady, setYtApiReady] = useState(false)
+  const dispatch = useDispatch()
   const [videoQuality, setVideoQuality] =
     useState<keyof typeof qualityLabels>('large')
   const { data: assignmentsData } = useFetchItemsWithAuthQuery(sectionId)
@@ -549,124 +552,37 @@ const ContentScrollView2 = () => {
 
   // This funtion called when user submits the assessment
 
-  const handleSubmit = () => {
-    console.log('i am selected Option', selectedOption.join(','))
+  const handleSubmit = async () => {
+    console.log('Submitting assessment...')
+    console.log('Selected Option:', selectedOption.join(','))
+  
     const question =
       AssessmentData && AssessmentData[currentQuestionIndex]
         ? AssessmentData[currentQuestionIndex]
         : null
-    submitAssessment({
-      assessmentId: assessmentId,
-      courseId: courseId,
-      attemptId: responseData ? parseInt(responseData, 10) : 0,
-      questionId: question ? question.id : 0,
-      answers: selectedOption.join(','),
-    })
-      .then((response) => {
-        if (response.data) {
-          Cookies.set('gradingData', response.data.isAnswerCorrect.toString())
-          //   setGradingData(response.data.isAnswerCorrect)
-          if (response.data.isAnswerCorrect === false) {
-            // const nextFrameIndex =
-            //   (currentFrame - 1 + content.length) % content.length
-            // localStorage.setItem('nextFrame', nextFrameIndex)
-            // toast('Incorrect Answer! The segment will now run again.')
-            // setTimeout(() => {
-            //   window.location.reload()
-            // }, 2000)
-            toast('Incorrect Answer! The segment will now run again.')
-            setCurrentFrame((prevFrame) => (prevFrame - 1) % content.length)
-          } else {
-            toast('Correct Answer! Moving to the next segment !')
-            const sectionItemId1 = `${content[currentFrame - 1].id}`
-            const sectionItemId2 = `${content[currentFrame].id}`
-
-            updateSectionItemProgress({
-              courseInstanceId: courseId,
-              sectionItemId: [sectionItemId1, sectionItemId2],
-              cascade: true,
-            })
-              .then((response) => {
-                if (response.data) {
-                  //   interface SectionItem {
-                  //     sectionItems: string[]
-                  //     sections: string[]
-                  //   }
-                  //   interface UpdateSectionItemProgressResponse {
-                  //     data: SectionItem[]
-                  //   }
-                  //   const handleUpdateProgress = (
-                  //     response: UpdateSectionItemProgressResponse
-                  //   ) => {
-                  //     response.data.forEach((item) => {
-                  //       if (Array.isArray(item.sectionItems)) {
-                  //         item.sectionItems.forEach((sectionItemId: string) => {
-                  //           const newCourseInstanceId = courseId
-                  //           const newSectionItemId = sectionItemId
-                  //           dispatch(
-                  //             clearProgress({
-                  //               courseInstanceId: newCourseInstanceId,
-                  //               sectionItemId: newSectionItemId,
-                  //             })
-                  //           )
-                  //           dispatch(
-                  //             clearAndFetchProgress({
-                  //               courseInstanceId: newCourseInstanceId,
-                  //               sectionItemId: newSectionItemId,
-                  //             })
-                  //           )
-                  //         })
-                  //       }
-                  //       if (Array.isArray(item.sections)) {
-                  //         item.sections.forEach((newsectionId: string) => {
-                  //           dispatch(
-                  //             clearSectionProgress({
-                  //               courseInstanceId: courseId,
-                  //               sectionId: newsectionId,
-                  //             })
-                  //           )
-                  //           dispatch(
-                  //             clearAndFetchSectionProgress({
-                  //               courseInstanceId: courseId,
-                  //               sectionId: newsectionId,
-                  //             })
-                  //           )
-                  //         })
-                  //       }
-                  //       // Uncomment and add a similar check for item.modules if needed
-                  //       // if (Array.isArray(item.modules)) {
-                  //       //   dispatch(clearModuleProgress({
-                  //       //     courseInstanceId: courseId,
-                  //       //     moduleId: item.modules,
-                  //       //   }));
-                  //       // }
-                  //     })
-                  //   }
-                } else {
-                  console.error('Failed to update progress.')
-                }
-              })
-              .catch((error) => {
-                console.error('Failed to update progress.', error)
-              })
-            const newframe = currentFrame + 1
-            triggerRefresh()
-            if (newframe !== content.length) {
-              setCurrentFrame((prevFrame) => (prevFrame + 1) % content.length)
-              setSelectedOption([])
-              setSelectedOption([])
-              setCurrentQuestionIndex(0)
-              setCurrentTime(0)
-              setIsPlaying(false)
-              fetchAssessment(currentFrame)
-            } else navigate('/')
-          }
-        }
-      })
-      .catch(() => {
-        toast('Failed to submit assessment. Please try again.')
-      })
+  
+    try {
+      const response = await submitAssessment({
+        assessmentId,
+        courseId,
+        attemptId: responseData ? parseInt(responseData, 10) : 0,
+        questionId: question ? question.id : 0,
+        answers: selectedOption.join(','),
+      }).unwrap()
+  
+      console.log('API Response:', response) // ✅ Ensure response contains streak
+      console.log('Streak from API:', response.currentStreak) // ✅ Log streak value
+  
+      if (response.currentStreak !== undefined) {
+        dispatch(setStreak(response.currentStreak)) // ✅ Update Redux store
+      } else {
+        console.error('API did not return a streak value.')
+      }
+    } catch (error) {
+      console.error('Failed to submit assessment:', error)
+    }
   }
+  
 
   // This funtion is responsible to set the selected option after click on any option of question by user
   // const handleOptionClick = (option) => {

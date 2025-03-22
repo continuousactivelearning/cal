@@ -54,7 +54,8 @@ const EnrollStudents = () => {
     const courseId = selectedCourse; // Replace with your actual course ID
     courseEnroll({
       courseId,
-      studentIds: selectedUsers
+      studentIds: selectedUsers,
+      batchName: 'batchId1',
     });
   }
 
