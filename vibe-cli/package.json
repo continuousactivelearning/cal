@@ -1,0 +1,17 @@
+{
+  "name": "vibe",
+  "version": "0.1.0",
+  "main": "dist/cli.js",
+  "bin": {
+    "vibe": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "esbuild src/cli.ts --bundle --platform=node --target=node22 --outfile=dist/cli.js --format=cjs"
+  },
+  "dependencies": {
+    "commander": "^10.0.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.19.0"
+  }
+}

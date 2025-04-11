@@ -1,4 +1,8 @@
 packages:
-  - "frontend"
-  - "backend"
-  - "docs"
+  - frontend
+  - backend
+  - docs
+  - vibe-cli
+
+onlyBuiltDependencies:
+  - esbuild
